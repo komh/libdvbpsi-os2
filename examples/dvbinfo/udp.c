@@ -42,9 +42,14 @@
 #       include <netinet/if_ether.h>
 #   endif
 #   include <netdb.h>
+#   include <netinet/in_systm.h>    /* n_long */
 #   include <netinet/ip.h>
 #   include <netinet/udp.h>
 #   include <arpa/inet.h>
+#   ifdef __OS2__
+#       include "getaddrinfo.h"
+#       define if_nametoindex(name) atoi(name)
+#   endif
 #endif
 
 #ifndef SOL_IP
@@ -113,6 +118,7 @@ static bool mcast_connect(int s, const char *interface, const struct sockaddr_st
 
     switch(addr->sa_family)
     {
+#ifndef __OS2__
         case AF_INET6:
         {
             const struct sockaddr_in6 *sin6 = (const struct sockaddr_in6 *)saddr;
@@ -123,6 +129,7 @@ static bool mcast_connect(int s, const char *interface, const struct sockaddr_st
                 return true;
             break;
         }
+#endif
         case AF_INET:
             if (setsockopt(s, SOL_IP, MCAST_JOIN_GROUP, &greq, sizeof(greq)) == 0)
                 return true;
@@ -133,6 +140,7 @@ static bool mcast_connect(int s, const char *interface, const struct sockaddr_st
 #else
     switch(addr->sa_family)
     {
+# ifndef __OS2__
         case AF_INET6:
         {
             struct ipv6_mreq ipv6mr;
@@ -142,14 +150,15 @@ static bool mcast_connect(int s, const char *interface, const struct sockaddr_st
             assert(len >= sizeof (struct sockaddr_in6));
             ipv6mr.ipv6mr_multiaddr = ip6->sin6_addr;
             ipv6mr.ipv6mr_interface = (ifindex > 0) ? ifindex : ip6->sin6_scope_id;
-# ifdef IPV6_JOIN_GROUP
+#  ifdef IPV6_JOIN_GROUP
             if (setsockopt(s, SOL_IPV6, IPV6_JOIN_GROUP, &ipv6mr, sizeof (ipv6mr)) == 0)
-# else
+#  else
             if (setsockopt(s, SOL_IPV6, IPV6_ADD_MEMBERSHIP, &ipv6mr, sizeof (ipv6mr)) == 0)
-# endif
+#  endif
                 return true;
             break;
         }
+# endif
 # ifdef IP_ADD_MEMBERSHIP
         case AF_INET:
         {

@@ -22,7 +22,10 @@ dnl store CFLAGS from user
 CFLAGS_save="${CFLAGS}"
 
 dnl add features to CFLAGS
-CFLAGS_dist="-Wall -Werror --std=gnu99 -D_GNU_SOURCE"
+CFLAGS_dist="-Wall --std=gnu99 -D_GNU_SOURCE"
+if test -n "${target_os##os2*}"; then
+CFLAGS_dist="${CFLAGS_dist} -Werror"
+fi
 CFLAGS_dist="${CFLAGS_dist} -Wpointer-arith -Wcast-align -Wcast-qual -Wstrict-prototypes -Wshadow -Waggregate-return -Wmissing-prototypes -Wnested-externs -Wsign-compare"
 
 dnl check the operating system
@@ -102,6 +105,9 @@ fi
 
 dnl Add -no-undefined to LDFLAGS on OS/2
 AS_CASE(${target_os}, [os2*], [LDFLAGS="${LDFLAGS} -no-undefined"])
+
+dnl Define HAVE_OS2 on OS/2
+AM_CONDITIONAL(HAVE_OS2, [test -z "${target_os##os2*}"])
 
 dnl
 dnl Generate Makefiles and other output files

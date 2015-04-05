@@ -55,6 +55,11 @@
 #   define O_NONBLOCK (0) /* O_NONBLOCK does not exist for Windows */
 #endif
 
+#ifdef __OS2__
+#   define O_CLOEXEC O_NOINHERIT    /* O_CLOEXEC is O_NOINHERIT on OS/2 */
+#   define daemon(nochdir, noclose) (-1)
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 
