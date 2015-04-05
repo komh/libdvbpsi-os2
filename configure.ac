@@ -100,6 +100,9 @@ if test "${ac_cv_cpp_variadic_macros}" != "no"; then
     AC_DEFINE(HAVE_VARIADIC_MACROS, 1, Support for variadic macros)
 fi
 
+dnl Add -no-undefined to LDFLAGS on OS/2
+AS_CASE(${target_os}, [os2*], [LDFLAGS="${LDFLAGS} -no-undefined"])
+
 dnl
 dnl Generate Makefiles and other output files
 dnl
