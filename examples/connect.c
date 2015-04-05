@@ -38,6 +38,7 @@
 #   include <netinet/if_ether.h>
 #endif
 #include <netdb.h>
+#include <netinet/in_systm.h>   /* n_long */
 #include <netinet/ip.h>
 #include <netinet/udp.h>
 #include <arpa/inet.h>
