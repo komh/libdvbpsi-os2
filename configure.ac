@@ -47,6 +47,9 @@ case "${target_os}" in
    ;;
 esac
 
+dnl Define HAVE_OS2 on OS/2
+AM_CONDITIONAL(HAVE_OS2, [test "${SYS}" = "os2"])
+
 dnl --enable-debug
 AC_ARG_ENABLE(debug,
 [  --enable-debug          Enable debug mode (default disabled)],

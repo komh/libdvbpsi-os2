@@ -45,9 +45,16 @@
 #       include <netinet/if_ether.h>
 #   endif
 #   include <netdb.h>
+#   include <netinet/in_systm.h>    /* n_long */
 #   include <netinet/ip.h>
 #   include <netinet/udp.h>
 #   include <arpa/inet.h>
+#   ifdef __OS2__
+#       include "getaddrinfo.h"
+#       ifndef SHUT_RDWR
+#           define SHUT_RDWR (2)
+#       endif
+#   endif
 #endif
 
 #ifndef SOCK_CLOEXEC
