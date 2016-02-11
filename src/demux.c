@@ -189,8 +189,6 @@ dvbpsi_demux_subdec_t *dvbpsi_NewDemuxSubDecoder(const uint8_t i_table_id,
  *****************************************************************************/
 void dvbpsi_DeleteDemuxSubDecoder(dvbpsi_demux_subdec_t *p_subdec)
 {
-    assert(p_subdec);
-
     if (!p_subdec)
         return;
     /* FIXME: find a saner way to release private decoder resources */
@@ -220,12 +218,12 @@ void dvbpsi_AttachDemuxSubDecoder(dvbpsi_demux_t *p_demux, dvbpsi_demux_subdec_t
 void dvbpsi_DetachDemuxSubDecoder(dvbpsi_demux_t *p_demux, dvbpsi_demux_subdec_t *p_subdec)
 {
     assert(p_demux);
-    assert(p_demux->p_first_subdec);
-
     assert(p_subdec);
 
     if (!p_demux || !p_subdec)
         abort();
+
+    assert(p_demux->p_first_subdec);
 
     dvbpsi_demux_subdec_t** pp_prev_subdec;
     pp_prev_subdec = &p_demux->p_first_subdec;

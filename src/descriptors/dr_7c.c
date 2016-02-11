@@ -49,7 +49,8 @@ struct dvbpsi_aac_profile_and_level_table_s
 static struct dvbpsi_aac_profile_and_level_table_s aac_profile_and_level_table[] =
 {
     { 0x00, DVBPSI_AAC_PROFILE_RESERVED },
-    /* 0x00-0x0F Reserved */
+    /* 0x00-0x0E Reserved */
+    { 0x0F, DVBPSI_AAC_PROFILE_NOT_DEFINED },
     { 0x10, DVBPSI_AAC_PROFILE_MAIN_LEVEL_1 },
     { 0x11, DVBPSI_AAC_PROFILE_MAIN_LEVEL_2 },
     { 0x12, DVBPSI_AAC_PROFILE_MAIN_LEVEL_3 },
@@ -103,8 +104,14 @@ static struct dvbpsi_aac_profile_and_level_table_s aac_profile_and_level_table[]
     { 0x58, DVBPSI_HE_AAC_PROFILE_LEVEL_2 },
     { 0x59, DVBPSI_HE_AAC_PROFILE_LEVEL_3 },
     { 0x5A, DVBPSI_HE_AAC_PROFILE_LEVEL_4 },
-    { 0x5B, DVBPSI_HE_AAC_PROFILE_LEVEL_5 }
-    /* 0x5C-0xFF RESERVED */
+    { 0x5B, DVBPSI_HE_AAC_PROFILE_LEVEL_5 },
+    /* 0x5C-0x5F RESERVED */
+    { 0x60, DVBPSI_HE_AAC_V2_PROFILE_LEVEL_2 },
+    { 0x61, DVBPSI_HE_AAC_V2_PROFILE_LEVEL_3 },
+    { 0x62, DVBPSI_HE_AAC_V2_PROFILE_LEVEL_4 },
+    { 0x63, DVBPSI_HE_AAC_V2_PROFILE_LEVEL_5 },
+    /* 0x64-0xFE RESERVED */
+    { 0xFF, DVBPSI_AAC_PROFILE_NOT_SPECIFIED }
 };
 static dvbpsi_aac_profile_and_level_t dvbpsi_aac_profile_and_level_lookup(const uint8_t value)
 {
@@ -257,7 +264,7 @@ dvbpsi_aac_dr_t *dvbpsi_DecodeAACDr(dvbpsi_descriptor_t *p_descriptor)
 
         uint8_t i_data = p_decoded->b_type ? 3 : 2;
         uint8_t *p = &p_descriptor->p_data[i_data];
-        memcpy(&p_decoded->p_additional_info, p, i_info_length);
+        memcpy(p_decoded->p_additional_info, p, i_info_length);
     }
 
     p_descriptor->p_decoded = (void*)p_decoded;
@@ -292,7 +299,7 @@ dvbpsi_descriptor_t *dvbpsi_GenAACDr(dvbpsi_aac_dr_t *p_decoded, bool b_duplicat
     if (p_descriptor->i_length > 1)
     {
         uint8_t *p = &p_descriptor->p_data[p_decoded->b_type ? 3 : 2];
-        memcpy(&p, p_decoded->p_additional_info, p_decoded->i_additional_info_length);
+        memcpy(p, p_decoded->p_additional_info, p_decoded->i_additional_info_length);
     }
 
     if (b_duplicate)

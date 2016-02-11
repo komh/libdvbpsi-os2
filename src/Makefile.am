@@ -11,7 +11,7 @@ libdvbpsi_la_SOURCES = dvbpsi.c dvbpsi_private.h \
                        $(tables_src) \
                        $(descriptors_src)
 
-libdvbpsi_la_LDFLAGS = -version-info 9:0:0 -no-undefined
+libdvbpsi_la_LDFLAGS = -version-info 10:0:0 -no-undefined
 
 pkginclude_HEADERS = dvbpsi.h psi.h descriptor.h demux.h \
                      tables/pat.h tables/pmt.h tables/sdt.h tables/eit.h \
@@ -34,8 +34,13 @@ pkginclude_HEADERS = dvbpsi.h psi.h descriptor.h demux.h \
                      descriptors/dr_0d.h \
                      descriptors/dr_0e.h \
                      descriptors/dr_0f.h \
+                     descriptors/dr_10.h \
+                     descriptors/dr_11.h \
+                     descriptors/dr_12.h \
                      descriptors/dr_13.h \
                      descriptors/dr_14.h \
+                     descriptors/dr_1b.h \
+                     descriptors/dr_1c.h \
 		     descriptors/dr_40.h \
 		     descriptors/dr_41.h \
                      descriptors/dr_42.h \
@@ -72,7 +77,8 @@ pkginclude_HEADERS = dvbpsi.h psi.h descriptor.h demux.h \
 		     descriptors/dr_8a.h \
 		     descriptors/dr_a0.h \
 		     descriptors/dr_a1.h \
-                     descriptors/dr.h
+		     descriptors/types/aac_profile.h \
+		     descriptors/dr.h
 
 descriptors_src = descriptors/dr_02.c \
                   descriptors/dr_03.c \
@@ -88,8 +94,13 @@ descriptors_src = descriptors/dr_02.c \
                   descriptors/dr_0d.c \
                   descriptors/dr_0e.c \
                   descriptors/dr_0f.c \
+                  descriptors/dr_10.c \
+                  descriptors/dr_11.c \
+                  descriptors/dr_12.c \
                   descriptors/dr_13.c \
                   descriptors/dr_14.c \
+                  descriptors/dr_1b.c \
+                  descriptors/dr_1c.c \
 		  descriptors/dr_40.c \
 		  descriptors/dr_41.c \
                   descriptors/dr_42.c \
@@ -143,3 +154,12 @@ tables_src = tables/pat.c tables/pat_private.h \
 	     tables/atsc_ett.c tables/atsc_ett.h \
 	     tables/atsc_mgt.c tables/atsc_mgt.h
 
+install-data-local:
+	mkdir -p $(DESTDIR)$(pkgincludedir)/types
+
+install-data-hook:
+	mv $(DESTDIR)$(pkgincludedir)/aac_profile.h $(DESTDIR)$(pkgincludedir)/types
+
+uninstall-local:
+	rm -f $(DESTDIR)$(pkgincludedir)/types/aac_profile.h
+	rmdir $(DESTDIR)$(pkgincludedir)/types

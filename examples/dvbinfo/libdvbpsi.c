@@ -302,6 +302,7 @@ static void handle_atsc_MGT(void *p_data, dvbpsi_atsc_mgt_t *p_mgt);
 static void handle_atsc_EIT(void *p_data, dvbpsi_atsc_eit_t *p_eit);
 static void handle_atsc_ETT(void* p_data, dvbpsi_atsc_ett_t *p_ett);
 static void handle_atsc_STT(void* p_data, dvbpsi_atsc_stt_t *p_stt);
+static const char *AACProfileToString(dvbpsi_aac_profile_and_level_t profile);
 
 /*****************************************************************************
  * mdate: current time in milliseconds
@@ -314,6 +315,7 @@ mtime_t mdate(void)
     if (gettimeofday(&tv, NULL) < 0)
     {
         fprintf(stderr, "gettimeofday() error: %s\n", strerror(errno));
+	/* coverity [+kill} */
         abort();
     }
 
@@ -841,7 +843,7 @@ static char const* GetDescriptorName(uint8_t tag)
     case 0x0d: return "Copyright descriptor";
     case 0x0e: return "Maximum bitrate descriptor";
     case 0x0f: return "Private data indicator descriptor";
-    case 0x10: return "Soothing buffer descriptor";
+    case 0x10: return "Smoothing buffer descriptor";
     case 0x11: return "STD descriptor";
     case 0x12: return "IBP descriptor";
     // case 0x13..0x1a: return "Defined in ISO/IEC 13818-6";
@@ -945,16 +947,111 @@ static char const* GetDescriptorName(uint8_t tag)
 /*****************************************************************************
  * DumpMaxBitrateDescriptor
  *****************************************************************************/
-static void DumpMaxBitrateDescriptor(dvbpsi_max_bitrate_dr_t* bitrate_descriptor)
+static void DumpMaxBitrateDescriptor(const void *p_descriptor)
 {
+    const dvbpsi_max_bitrate_dr_t* bitrate_descriptor = p_descriptor;
     printf("Bitrate: %d\n", bitrate_descriptor->i_max_bitrate);
+}
+
+/*****************************************************************************
+ * DumpSmoothingBufferDescriptor
+ *****************************************************************************/
+static void DumpSmoothingBufferDescriptor(const void *p_descriptor)
+{
+    const dvbpsi_smoothing_buffer_dr_t *smoothing_descriptor = p_descriptor;
+    printf("Leak rate: %d \n", smoothing_descriptor->i_sb_leak_rate);
+    printf("\t\tSize: %d \n", smoothing_descriptor->i_sb_size);
+}
+
+/*****************************************************************************
+ * DumpSTDDescriptor
+ *****************************************************************************/
+static void DumpSTDDescriptor(const void *p_descriptor)
+{
+    const dvbpsi_std_dr_t* std_descriptor = p_descriptor;
+    printf("Leak valid flag: %d\n", std_descriptor->b_leak_valid_flag);
+}
+
+/*****************************************************************************
+ * DumpIBPDescriptor
+ *****************************************************************************/
+static void DumpIBPDescriptor(const void *p_descriptor)
+{
+    const dvbpsi_ibp_dr_t *ibp_descriptor = p_descriptor;
+    printf("Closed GOP flag: %d \n", ibp_descriptor->b_closed_gop_flag);
+    printf("\t\tIdentical GOP flag: %d \n", ibp_descriptor->b_identical_gop_flag);
+    printf("\t\tMax GOP length: %" PRIu16 " \n", ibp_descriptor->i_max_gop_length);
+}
+
+static const char* MPEG4VideoProfileToString(dvbpsi_mpeg4_visual_profile_and_level_t profile)
+{
+    switch(profile)
+    {
+        case DVBPSI_MPEG4V_PROFILE_SIMPLE_L1: return "Simple Profile/Level 1";
+        case DVBPSI_MPEG4V_PROFILE_SIMPLE_L2: return "Simple Profile/Level 2";
+        case DVBPSI_MPEG4V_PROFILE_SIMPLE_L3: return "Simple Profile/Level 3";
+        case DVBPSI_MPEG4V_PROFILE_SIMPLE_SCALABLE_L1: return "Simple Scalable Profile/Level 1";
+        case DVBPSI_MPEG4V_PROFILE_SIMPLE_SCALABLE_L2: return "Simple Scalable Profile/Level 2";
+        case DVBPSI_MPEG4V_PROFILE_CORE_L1: return "Core Profile/Level 1";
+        case DVBPSI_MPEG4V_PROFILE_CORE_L2: return "Core Profile/Level 2";
+        case DVBPSI_MPEG4V_PROFILE_MAIN_L2: return "Main Profile/Level 2";
+        case DVBPSI_MPEG4V_PROFILE_MAIN_L3: return "Main Profile/Level 3";
+        case DVBPSI_MPEG4V_PROFILE_MAIN_L4: return "Main Profile/Level 4";
+        case DVBPSI_MPEG4V_PROFILE_N_BIT_L2: return "N-bit Profile/Level 2";
+        case DVBPSI_MPEG4V_PROFILE_SCALABLE_TEXTURE_L1: return "Scalable Texture Profile/Level 1";
+        case DVBPSI_MPEG4V_PROFILE_SIMPLE_FACE_ANIMATION_L1: return "Simple Face Animation Profile/Level 1";
+        case DVBPSI_MPEG4V_PROFILE_SIMPLE_FACE_ANIMATION_L2: return "Simple Face Animation Profile/Level 2";
+        case DVBPSI_MPEG4V_PROFILE_SIMPLE_FBA_L1: return "Simple FBA Profile/Level 1";
+        case DVBPSI_MPEG4V_PROFILE_SIMPLE_FBA_L2: return "Simple FBA Profile/Level 2";
+        case DVBPSI_MPEG4V_PROFILE_BASIC_ANIMATED_TEXTURE_L1: return "Basic Animated Texture Profile/Level 1";
+        case DVBPSI_MPEG4V_PROFILE_BASIC_ANIMATED_TEXTURE_L2: return "Basic Animated Texture Profile/Level 2";
+        case DVBPSI_MPEG4V_PROFILE_HYBRID_L1: return "Hybrid Profile/Level 1";
+        case DVBPSI_MPEG4V_PROFILE_HYBRID_L2: return "Hybrid Profile/Level 2";
+        case DVBPSI_MPEG4V_PROFILE_ADV_REAL_TIME_SIMPLE_L1: return "Advanced Real Time Simple Profile/Level 1";
+        case DVBPSI_MPEG4V_PROFILE_ADV_REAL_TIME_SIMPLE_L2: return "Advanced Real Time Simple Profile/Level 2";
+        case DVBPSI_MPEG4V_PROFILE_ADV_REAL_TIME_SIMPLE_L3: return "Advanced Real Time Simple Profile/Level 3";
+        case DVBPSI_MPEG4V_PROFILE_ADV_REAL_TIME_SIMPLE_L4: return "Advanced Real Time Simple Profile/Level 4";
+        case DVBPSI_MPEG4V_PROFILE_CORE_SCALABLE_L1: return "Core Scalable Profile/Level 1";
+        case DVBPSI_MPEG4V_PROFILE_CORE_SCALABLE_L2: return "Core Scalable Profile/Level 2";
+        case DVBPSI_MPEG4V_PROFILE_CORE_SCALABLE_L3: return "Core Scalable Profile/Level 3";
+        case DVBPSI_MPEG4V_PROFILE_ADV_CODING_EFF_L1: return "Advanced Coding Efficiency Profile/Level 1";
+        case DVBPSI_MPEG4V_PROFILE_ADV_CODING_EFF_L2: return "Advanced Coding Efficiency Profile/Level 2";
+        case DVBPSI_MPEG4V_PROFILE_ADV_CODING_EFF_L3: return "Advanced Coding Efficiency Profile/Level 3";
+        case DVBPSI_MPEG4V_PROFILE_ADV_CODING_EFF_L4: return "Advanced Coding Efficiency Profile/Level 4";
+        case DVBPSI_MPEG4V_PROFILE_ADV_CORE_L1: return "Advanced Core Profile/Level 1";
+        case DVBPSI_MPEG4V_PROFILE_ADV_CORE_L2: return "Advanced Core Profile/Level 2";
+        case DVBPSI_MPEG4V_PROFILE_ADV_SCALABLE_TEXTURE_L1: return "Advanced Scalable Texture/Level 1";
+        case DVBPSI_MPEG4V_PROFILE_ADV_SCALABLE_TEXTURE_L2: return "Advanced Scalable Texture/Level 2";
+        case DVBPSI_MPEG4V_PROFILE_ADV_SCALABLE_TEXTURE_L3: return "Advanced Scalable Texture/Level 3";
+
+        case DVBPSI_MPEG4V_PROFILE_LAST:
+        default:
+            return "Reserved";
+    }
+}
+
+static void DumpMPEG4VideoDescriptor(const void *p_descriptor)
+{
+    const dvbpsi_mpeg4_video_dr_t *mpeg4_descriptor = p_descriptor;
+    printf("MPEG-4 Video Profile and Level : %s (0x%02x) \n",
+        MPEG4VideoProfileToString(mpeg4_descriptor->i_mpeg4_visual_profile_and_level),
+        mpeg4_descriptor->i_mpeg4_visual_profile_and_level);
+}
+
+static void DumpMPEG4AudioDescriptor(const void *p_descriptor)
+{
+    const dvbpsi_mpeg4_audio_dr_t *mpeg4_descriptor = p_descriptor;
+    printf("MPEG-4 Audio Profile and Level : %s (0x%02x) \n",
+        AACProfileToString(mpeg4_descriptor->i_mpeg4_audio_profile_and_level),
+        mpeg4_descriptor->i_mpeg4_audio_profile_and_level);
 }
 
 /*****************************************************************************
  * DumpSystemClockDescriptor
  *****************************************************************************/
-static void DumpSystemClockDescriptor(dvbpsi_system_clock_dr_t* p_clock_descriptor)
+static void DumpSystemClockDescriptor(const void *p_descriptor)
 {
+    const dvbpsi_system_clock_dr_t* p_clock_descriptor = p_descriptor;
     printf("External clock: %s, Accuracy: %E\n",
     p_clock_descriptor->b_external_clock_ref ? "Yes" : "No",
     p_clock_descriptor->i_clock_accuracy_integer *
@@ -964,16 +1061,18 @@ static void DumpSystemClockDescriptor(dvbpsi_system_clock_dr_t* p_clock_descript
 /*****************************************************************************
  * DumpStreamIdentifierDescriptor
  *****************************************************************************/
-static void DumpStreamIdentifierDescriptor(dvbpsi_stream_identifier_dr_t* p_si_descriptor)
+static void DumpStreamIdentifierDescriptor(const void *p_descriptor)
 {
+    const dvbpsi_stream_identifier_dr_t* p_si_descriptor = p_descriptor;
     printf("Component tag: %d\n", p_si_descriptor->i_component_tag);
 }
 
 /*****************************************************************************
  * DumpCAIdentifierDescriptor
  *****************************************************************************/
-static void DumpCAIdentifierDescriptor(dvbpsi_ca_identifier_dr_t *p_ca_descriptor)
+static void DumpCAIdentifierDescriptor(const void *p_descriptor)
 {
+    const dvbpsi_ca_identifier_dr_t *p_ca_descriptor = p_descriptor;
     printf("CA system id\n");
     for(int i = 0; i < p_ca_descriptor->i_number; i++ )
         printf("\t%d: %d\n", i, p_ca_descriptor->p_system[i].i_ca_system_id);
@@ -1106,8 +1205,9 @@ static const char *GetContentSubCategory( const int i_type )
     return "Unknown";
 }
 
-static void DumpContentDescriptor(dvbpsi_content_dr_t *p_content_descriptor)
+static void DumpContentDescriptor(const void *p_descriptor)
 {
+    const dvbpsi_content_dr_t *p_content_descriptor = p_descriptor;
     dr_content_category_t content_category[] = {
         { DVBPSI_CONTENT_CAT_UNDEFINED, "Undefined" },
         { DVBPSI_CONTENT_CAT_MOVIE, "Movie" },
@@ -1143,9 +1243,10 @@ static void DumpContentDescriptor(dvbpsi_content_dr_t *p_content_descriptor)
 /*****************************************************************************
  * DumpSubtitleDescriptor
  *****************************************************************************/
-static void DumpSubtitleDescriptor(dvbpsi_subtitling_dr_t* p_subtitle_descriptor)
+static void DumpSubtitleDescriptor(const void *p_descriptor)
 {
     int a;
+    const dvbpsi_subtitling_dr_t* p_subtitle_descriptor = p_descriptor;
 
     printf("%d subtitles,\n", p_subtitle_descriptor->i_subtitles_number);
     for (a = 0; a < p_subtitle_descriptor->i_subtitles_number; ++a)
@@ -1160,76 +1261,96 @@ static void DumpSubtitleDescriptor(dvbpsi_subtitling_dr_t* p_subtitle_descriptor
     }
 }
 
+static const char *AACProfileToString(dvbpsi_aac_profile_and_level_t profile)
+{
+    switch(profile)
+    {
+    /* 0x00-0x0E Reserved */
+    case DVBPSI_AAC_PROFILE_NOT_DEFINED:
+        return "No audio profile and level defined for the associated MPEG-4 "
+            "audio stream";
+
+    case DVBPSI_AAC_PROFILE_MAIN_LEVEL_1: return "Main profile, level 1";
+    case DVBPSI_AAC_PROFILE_MAIN_LEVEL_2: return "Main profile, level 2";
+    case DVBPSI_AAC_PROFILE_MAIN_LEVEL_3: return "Main profile, level 3";
+    case DVBPSI_AAC_PROFILE_MAIN_LEVEL_4: return "Main profile, level 4";
+    /* 0x14-0x17 Reserved */
+    case DVBPSI_AAC_PROFILE_SCALABLE_LEVEL_1: return "Scalable Profile, level 1";
+    case DVBPSI_AAC_PROFILE_SCALABLE_LEVEL_2: return "Scalable Profile, level 2";
+    case DVBPSI_AAC_PROFILE_SCALABLE_LEVEL_3: return "Scalable Profile, level 3";
+    case DVBPSI_AAC_PROFILE_SCALABLE_LEVEL_4: return "Scalable Profile, level 4";
+    /* 0x1C-0x1F Reserved */
+    case DVBPSI_AAC_PROFILE_SPEECH_LEVEL_1: return "Speech profile, level 1";
+    case DVBPSI_AAC_PROFILE_SPEECH_LEVEL_2: return "Speech profile, level 2";
+    /* 0x22-0x27 Reserved */
+    case DVBPSI_AAC_PROFILE_SYNTHESIS_LEVEL_1: return "Synthesis profile, level 1";
+    case DVBPSI_AAC_PROFILE_SYNTHESIS_LEVEL_2: return "Synthesis profile, level 2";
+    case DVBPSI_AAC_PROFILE_SYNTHESIS_LEVEL_3: return "Synthesis profile, level 3";
+    /* 0x2B-0x2F Reserved */
+    case DVBPSI_AAC_PROFILE_HQ_LEVEL_1: return "High quality audio profile, level 1";
+    case DVBPSI_AAC_PROFILE_HQ_LEVEL_2: return "High quality audio profile, level 2";
+    case DVBPSI_AAC_PROFILE_HQ_LEVEL_3: return "High quality audio profile, level 3";
+    case DVBPSI_AAC_PROFILE_HQ_LEVEL_4: return "High quality audio profile, level 4";
+    case DVBPSI_AAC_PROFILE_HQ_LEVEL_5: return "High quality audio profile, level 5";
+    case DVBPSI_AAC_PROFILE_HQ_LEVEL_6: return "High quality audio profile, level 6";
+    case DVBPSI_AAC_PROFILE_HQ_LEVEL_7: return "High quality audio profile, level 7";
+    case DVBPSI_AAC_PROFILE_HQ_LEVEL_8: return "High quality audio profile, level 8";
+
+    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_1: return "Low delay audio profile, level 1";
+    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_2: return "Low delay audio profile, level 2";
+    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_3: return "Low delay audio profile, level 3";
+    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_4: return "Low delay audio profile, level 4";
+    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_5: return "Low delay audio profile, level 5";
+    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_6: return "Low delay audio profile, level 6";
+    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_7: return "Low delay audio profile, level 7";
+    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_8: return "Low delay audio profile, level 8";
+
+    case DVBPSI_AAC_PROFILE_NATURAL_LEVEL_1: return "Natural audio profile, level 1";
+    case DVBPSI_AAC_PROFILE_NATURAL_LEVEL_2: return "Natural audio profile, level 2";
+    case DVBPSI_AAC_PROFILE_NATURAL_LEVEL_3: return "Natural audio profile, level 3";
+    case DVBPSI_AAC_PROFILE_NATURAL_LEVEL_4: return "Natural audio profile, level 4";
+    /* 0x44-0x47 Reserved */
+    case DVBPSI_AAC_PROFILE_MOBILE_LEVEL_1: return "Mobile audio internetworking profile, level 1";
+    case DVBPSI_AAC_PROFILE_MOBILE_LEVEL_2: return "Mobile audio internetworking profile, level 2";
+    case DVBPSI_AAC_PROFILE_MOBILE_LEVEL_3: return "Mobile audio internetworking profile, level 3";
+    case DVBPSI_AAC_PROFILE_MOBILE_LEVEL_4: return "Mobile audio internetworking profile, level 4";
+    case DVBPSI_AAC_PROFILE_MOBILE_LEVEL_5: return "Mobile audio internetworking profile, level 5";
+    case DVBPSI_AAC_PROFILE_MOBILE_LEVEL_6: return "Mobile audio internetworking profile, level 6";
+    /* 0x4E-0x4F Reserved */
+    case DVBPSI_AAC_PROFILE_LEVEL_1: return "AAC profile, level 1";
+    case DVBPSI_AAC_PROFILE_LEVEL_2: return "AAC profile, level 2";
+    case DVBPSI_AAC_PROFILE_LEVEL_4: return "AAC profile, level 4";
+    case DVBPSI_AAC_PROFILE_LEVEL_5: return "AAC profile, level 5";
+    /* 0x54-0x57 RESERVED */
+    case DVBPSI_HE_AAC_PROFILE_LEVEL_2: return "High efficiency AAC profile, level 2";
+    case DVBPSI_HE_AAC_PROFILE_LEVEL_3: return "High efficiency AAC profile, level 3";
+    case DVBPSI_HE_AAC_PROFILE_LEVEL_4: return "High efficiency AAC profile, level 4";
+    case DVBPSI_HE_AAC_PROFILE_LEVEL_5: return "High efficiency AAC profile, level 5";
+    /* 0x5C-0x5F RESERVED */
+    case DVBPSI_HE_AAC_V2_PROFILE_LEVEL_2: return "High efficiency AAC v2 profile, level 2";
+    case DVBPSI_HE_AAC_V2_PROFILE_LEVEL_3: return "High efficiency AAC v2 profile, level 3";
+    case DVBPSI_HE_AAC_V2_PROFILE_LEVEL_4: return "High efficiency AAC v2 profile, level 4";
+    case DVBPSI_HE_AAC_V2_PROFILE_LEVEL_5: return "High efficiency AAC v2 profile, level 5";
+    /* 0x64-0xFE RESERVED */
+    case DVBPSI_AAC_PROFILE_NOT_SPECIFIED:
+        return "Audio profile and level not specified by the "
+            "MPEG-4_audio_profile_and_level field in this descriptor";
+    /* RESERVED */
+    case DVBPSI_AAC_PROFILE_RESERVED:
+    default: return "reserved";
+    }
+}
+
 /*****************************************************************************
  * DumpAACDescriptor
  *****************************************************************************/
-static void DumpAACDescriptor(dvbpsi_aac_dr_t *p_aac_descriptor)
+static void DumpAACDescriptor(const void *p_descriptor)
 {
+    const dvbpsi_aac_dr_t *p_aac_descriptor = p_descriptor;
     printf("AAC audio descriptor\n");
-    printf("\tprofile and level: ");
-    switch(p_aac_descriptor->i_profile_and_level)
-    {
-        /* 0x00-0x0F Reserved */
-    case DVBPSI_AAC_PROFILE_MAIN_LEVEL_1: printf("Main profile, level 1\n"); break;
-    case DVBPSI_AAC_PROFILE_MAIN_LEVEL_2: printf("Main profile, level 2\n"); break;
-    case DVBPSI_AAC_PROFILE_MAIN_LEVEL_3: printf("Main profile, level 3\n"); break;
-    case DVBPSI_AAC_PROFILE_MAIN_LEVEL_4: printf("Main profile, level 4\n"); break;
-        /* 0x14-0x17 Reserved */
-    case DVBPSI_AAC_PROFILE_SCALABLE_LEVEL_1: printf("Scalable Profile, level 1\n"); break;
-    case DVBPSI_AAC_PROFILE_SCALABLE_LEVEL_2: printf("Scalable Profile, level 2\n"); break;
-    case DVBPSI_AAC_PROFILE_SCALABLE_LEVEL_3: printf("Scalable Profile, level 3\n"); break;
-    case DVBPSI_AAC_PROFILE_SCALABLE_LEVEL_4: printf("Scalable Profile, level 4\n"); break;
-        /* 0x1C-0x1F Reserved */
-    case DVBPSI_AAC_PROFILE_SPEECH_LEVEL_1: printf("Speech profile, level 1\n"); break;
-    case DVBPSI_AAC_PROFILE_SPEECH_LEVEL_2: printf("Speech profile, level 2\n"); break;
-        /* 0x22-0x27 Reserved */
-    case DVBPSI_AAC_PROFILE_SYNTHESIS_LEVEL_1: printf("Synthesis profile, level 1\n"); break;
-    case DVBPSI_AAC_PROFILE_SYNTHESIS_LEVEL_2: printf("Synthesis profile, level 2\n"); break;
-    case DVBPSI_AAC_PROFILE_SYNTHESIS_LEVEL_3: printf("Synthesis profile, level 3\n"); break;
-        /* 0x2B-0x2F Reserved */
-    case DVBPSI_AAC_PROFILE_HQ_LEVEL_1: printf("High quality audio profile, level 1\n"); break;
-    case DVBPSI_AAC_PROFILE_HQ_LEVEL_2: printf("High quality audio profile, level 2\n"); break;
-    case DVBPSI_AAC_PROFILE_HQ_LEVEL_3: printf("High quality audio profile, level 3\n"); break;
-    case DVBPSI_AAC_PROFILE_HQ_LEVEL_4: printf("High quality audio profile, level 4\n"); break;
-    case DVBPSI_AAC_PROFILE_HQ_LEVEL_5: printf("High quality audio profile, level 5\n"); break;
-    case DVBPSI_AAC_PROFILE_HQ_LEVEL_6: printf("High quality audio profile, level 6\n"); break;
-    case DVBPSI_AAC_PROFILE_HQ_LEVEL_7: printf("High quality audio profile, level 7\n"); break;
-    case DVBPSI_AAC_PROFILE_HQ_LEVEL_8: printf("High quality audio profile, level 8\n"); break;
-
-    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_1: printf("Low delay audio profile, level 1\n"); break;
-    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_2: printf("Low delay audio profile, level 2\n"); break;
-    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_3: printf("Low delay audio profile, level 3\n"); break;
-    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_4: printf("Low delay audio profile, level 4\n"); break;
-    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_5: printf("Low delay audio profile, level 5\n"); break;
-    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_6: printf("Low delay audio profile, level 6\n"); break;
-    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_7: printf("Low delay audio profile, level 7\n"); break;
-    case DVBPSI_AAC_PROFILE_LOW_DELAY_LEVEL_8: printf("Low delay audio profile, level 8\n"); break;
-
-    case DVBPSI_AAC_PROFILE_NATURAL_LEVEL_1: printf("Natural audio profile, level 1\n"); break;
-    case DVBPSI_AAC_PROFILE_NATURAL_LEVEL_2: printf("Natural audio profile, level 2\n"); break;
-    case DVBPSI_AAC_PROFILE_NATURAL_LEVEL_3: printf("Natural audio profile, level 3\n"); break;
-    case DVBPSI_AAC_PROFILE_NATURAL_LEVEL_4: printf("Natural audio profile, level 4\n"); break;
-        /* 0x44-0x47 Reserved */
-    case DVBPSI_AAC_PROFILE_MOBILE_LEVEL_1: printf("Mobile audio internetworking profile, level 1\n"); break;
-    case DVBPSI_AAC_PROFILE_MOBILE_LEVEL_2: printf("Mobile audio internetworking profile, level 2\n"); break;
-    case DVBPSI_AAC_PROFILE_MOBILE_LEVEL_3: printf("Mobile audio internetworking profile, level 3\n"); break;
-    case DVBPSI_AAC_PROFILE_MOBILE_LEVEL_4: printf("Mobile audio internetworking profile, level 4\n"); break;
-    case DVBPSI_AAC_PROFILE_MOBILE_LEVEL_5: printf("Mobile audio internetworking profile, level 5\n"); break;
-    case DVBPSI_AAC_PROFILE_MOBILE_LEVEL_6: printf("Mobile audio internetworking profile, level 6\n"); break;
-        /* 0x4E-0x4F Reserved */
-    case DVBPSI_AAC_PROFILE_LEVEL_1: printf("AAC profile, level 1\n"); break;
-    case DVBPSI_AAC_PROFILE_LEVEL_2: printf("AAC profile, level 2\n"); break;
-    case DVBPSI_AAC_PROFILE_LEVEL_4: printf("AAC profile, level 4\n"); break;
-    case DVBPSI_AAC_PROFILE_LEVEL_5: printf("AAC profile, level 5\n"); break;
-        /* 0x54-0x57 RESERVED */
-    case DVBPSI_HE_AAC_PROFILE_LEVEL_2: printf("High efficiency AAC profile, level 2\n"); break;
-    case DVBPSI_HE_AAC_PROFILE_LEVEL_3: printf("High efficiency AAC profile, level 3\n"); break;
-    case DVBPSI_HE_AAC_PROFILE_LEVEL_4: printf("High efficiency AAC profile, level 4\n"); break;
-    case DVBPSI_HE_AAC_PROFILE_LEVEL_5: printf("High efficiency AAC profile, level 5\n"); break;
-        /* RESERVED */
-    case DVBPSI_AAC_PROFILE_RESERVED:
-    default: printf("reserved\n"); break;
-    }
+    printf("\tprofile and level: %s (0x%02x)\n",
+        AACProfileToString(p_aac_descriptor->i_profile_and_level),
+        p_aac_descriptor->i_profile_and_level);
 
     if (p_aac_descriptor->b_type)
     {
@@ -1300,8 +1421,9 @@ static void DumpAACDescriptor(dvbpsi_aac_dr_t *p_aac_descriptor)
 /*****************************************************************************
  * DumpTimeShiftedServiceDescriptor
  *****************************************************************************/
-static void DumpTimeShiftedServiceDescriptor(dvbpsi_tshifted_service_dr_t *p_ts_service)
+static void DumpTimeShiftedServiceDescriptor(const void *p_descriptor)
 {
+    const dvbpsi_tshifted_service_dr_t *p_ts_service = p_descriptor;
     printf("Time Shifted Service\n");
     printf("\treference service id:%d", p_ts_service->i_ref_service_id);
 }
@@ -1309,8 +1431,9 @@ static void DumpTimeShiftedServiceDescriptor(dvbpsi_tshifted_service_dr_t *p_ts_
 /*****************************************************************************
  * DumpTimeShiftedEventDescriptor
  *****************************************************************************/
-static void DumpTimeShiftedEventDescriptor(dvbpsi_tshifted_ev_dr_t *p_ts_event)
+static void DumpTimeShiftedEventDescriptor(const void *p_descriptor)
 {
+    const dvbpsi_tshifted_ev_dr_t *p_ts_event = p_descriptor;
     printf("Time Shifted Event");
     printf("\treference service id:%d", p_ts_event->i_ref_service_id);
     printf("\treference event id:%d", p_ts_event->i_ref_event_id);
@@ -1320,9 +1443,10 @@ static void DumpTimeShiftedEventDescriptor(dvbpsi_tshifted_ev_dr_t *p_ts_event)
  * DumpCUEIdentifierDescriptor
  *****************************************************************************/
 #ifdef TS_USE_DVB_CUEI
-static void DumpCUEIDescriptor(dvbpsi_cuei_dr_t* p_cuei_descriptor)
+static void DumpCUEIDescriptor(const void *p_descriptor)
 {
     const char *cuei_stream_type;
+    const dvbpsi_cuei_dr_t* p_cuei_descriptor = p_descriptor;
 
     assert(p_cuei_descriptor);
 
@@ -1462,6 +1586,117 @@ static void handle_SIS(void* p_data, dvbpsi_sis_t* p_sis)
 #endif
 
 /*****************************************************************************
+ * DumpDescriptor
+ *****************************************************************************/
+static void DumpDescriptor(dvbpsi_descriptor_t *p_descriptor)
+{
+    const void *p_decoded = NULL;
+    void (*dump_dr_fn)(const void*) = NULL;
+
+    switch (p_descriptor->i_tag)
+    {
+        case 0x06: /* data_stream_alignment_descriptor */
+            /* ISO/IEC 11172-2 video, ITU-T Rec. H.262 | ISO/IEC 13818-2 video,
+               or ISO/IEC 14496-2 visual streams */
+        case 0x28:
+            printf("\"");
+            for(int i = 0; i < p_descriptor->i_length; i++)
+            {
+                switch(p_descriptor->p_data[i])
+                {
+                case 0x00: printf("0"); break;
+                case 0x01: printf("1"); break;
+                case 0x02: printf("2"); break;
+                case 0x03: printf("3"); break;
+                /* unknown or reserved values  */
+                default: printf("?"); break;
+                }
+            }
+            printf("\" (%s)\n", GetDescriptorName(p_descriptor->i_tag));
+            return;
+        case 0x6a:
+            printf("\"a52\" (%s)\n", GetDescriptorName(p_descriptor->i_tag));
+            return;
+        case 0x7c:
+            p_decoded = dvbpsi_DecodeAACDr(p_descriptor);
+            dump_dr_fn = DumpAACDescriptor;
+            break;
+        case 0x08:
+            p_decoded = dvbpsi_DecodeSystemClockDr(p_descriptor);
+            dump_dr_fn = DumpSystemClockDescriptor;
+            break;
+#ifdef TS_USE_DVB_CUEI
+        case 0x8a:
+            p_decoded = dvbpsi_DecodeCUEIDr(p_descriptor);
+            dump_dr_fn = DumpCUEIDescriptor;
+            break;
+#endif
+        case 0x0e:
+            p_decoded = dvbpsi_DecodeMaxBitrateDr(p_descriptor);
+            dump_dr_fn = DumpMaxBitrateDescriptor;
+            break;
+        case 0x10:
+            p_decoded = dvbpsi_DecodeSmoothingBufferDr(p_descriptor);
+            dump_dr_fn = DumpSmoothingBufferDescriptor;
+            break;
+        case 0x11:
+            p_decoded = dvbpsi_DecodeSTDDr(p_descriptor);
+            dump_dr_fn = DumpSTDDescriptor;
+            break;
+        case 0x12:
+            p_decoded = dvbpsi_DecodeIBPDr(p_descriptor);
+            dump_dr_fn = DumpIBPDescriptor;
+            break;
+        case 0x1b:
+            p_decoded = dvbpsi_DecodeMPEG4VideoDr(p_descriptor);
+            dump_dr_fn = DumpMPEG4VideoDescriptor;
+            break;
+        case 0x1c:
+            p_decoded = dvbpsi_DecodeMPEG4AudioDr(p_descriptor);
+            dump_dr_fn = DumpMPEG4AudioDescriptor;
+            break;
+        case 0x4c:
+            p_decoded = dvbpsi_DecodeTimeShiftedServiceDr(p_descriptor);
+            dump_dr_fn = DumpTimeShiftedServiceDescriptor;
+            break;
+        case 0x4f:
+            p_decoded = dvbpsi_DecodeTimeShiftedEventDr(p_descriptor);
+            dump_dr_fn = DumpTimeShiftedEventDescriptor;
+            break;
+        case 0x52:
+            p_decoded = dvbpsi_DecodeStreamIdentifierDr(p_descriptor);
+            dump_dr_fn = DumpStreamIdentifierDescriptor;
+            break;
+        case 0x53:
+            p_decoded = dvbpsi_DecodeCAIdentifierDr(p_descriptor);
+            dump_dr_fn = DumpCAIdentifierDescriptor;
+            break;
+        case 0x54:
+            p_decoded = dvbpsi_DecodeContentDr(p_descriptor);
+            dump_dr_fn = DumpContentDescriptor;
+            break;
+        case 0x59:
+            p_decoded = dvbpsi_DecodeSubtitlingDr(p_descriptor);
+            dump_dr_fn = DumpSubtitleDescriptor;
+            break;
+    }
+
+    if(dump_dr_fn && p_decoded)
+    {
+        /* call the dump function if we could decode the descriptor. */
+        dump_dr_fn(p_decoded);
+    }
+    else
+    {
+        /* otherwise just dump the raw data. */
+        printf("\"");
+        for (int i = 0; i < p_descriptor->i_length; i++)
+             printf("%c", p_descriptor->p_data[i]);
+        printf("\" (%s)\n", GetDescriptorName(p_descriptor->i_tag));
+    }
+}
+
+/*****************************************************************************
  * DumpDescriptors
  *****************************************************************************/
 static void DumpDescriptors(const char* str, dvbpsi_descriptor_t* p_descriptor)
@@ -1469,69 +1704,7 @@ static void DumpDescriptors(const char* str, dvbpsi_descriptor_t* p_descriptor)
     while (p_descriptor)
     {
         printf("%s 0x%02x : ", str, p_descriptor->i_tag);
-        switch (p_descriptor->i_tag)
-        {
-            case 0x06: /* data_stream_alignment_descriptor */
-                /* ISO/IEC 11172-2 video, ITU-T Rec. H.262 | ISO/IEC 13818-2 video,
-                   or ISO/IEC 14496-2 visual streams */
-            case 0x28:
-                printf("\"");
-                for(int i = 0; i < p_descriptor->i_length; i++)
-                {
-                    switch(p_descriptor->p_data[i])
-                    {
-                    case 0x00: printf("0"); break;
-                    case 0x01: printf("1"); break;
-                    case 0x02: printf("2"); break;
-                    case 0x03: printf("3"); break;
-                    /* unknown or reserved values  */
-                    default: printf("?"); break;
-                    }
-                }
-                printf("\" (%s)\n", GetDescriptorName(p_descriptor->i_tag));
-                break;
-            case 0x6a:
-                printf("\"a52\" (%s)\n", GetDescriptorName(p_descriptor->i_tag));
-                break;
-            case 0x7c:
-                DumpAACDescriptor(dvbpsi_DecodeAACDr(p_descriptor));
-                break;
-            case 0x08:
-                DumpSystemClockDescriptor(dvbpsi_DecodeSystemClockDr(p_descriptor));
-                break;
-#ifdef TS_USE_DVB_CUEI
-            case 0x8a:
-                DumpCUEIDescriptor(dvbpsi_DecodeCUEIDr(p_descriptor));
-                break;
-#endif
-            case 0x0e:
-                DumpMaxBitrateDescriptor(dvbpsi_DecodeMaxBitrateDr(p_descriptor));
-                break;
-            case 0x4c:
-                DumpTimeShiftedServiceDescriptor(dvbpsi_DecodeTimeShiftedServiceDr(p_descriptor));
-                break;
-            case 0x4f:
-                DumpTimeShiftedEventDescriptor(dvbpsi_DecodeTimeShiftedEventDr(p_descriptor));
-                break;
-            case 0x52:
-                DumpStreamIdentifierDescriptor(dvbpsi_DecodeStreamIdentifierDr(p_descriptor));
-                break;
-            case 0x53:
-                DumpCAIdentifierDescriptor(dvbpsi_DecodeCAIdentifierDr(p_descriptor));
-                break;
-            case 0x54:
-                DumpContentDescriptor(dvbpsi_DecodeContentDr(p_descriptor));
-                break;
-            case 0x59:
-                DumpSubtitleDescriptor(dvbpsi_DecodeSubtitlingDr(p_descriptor));
-                break;
-            default:
-                printf("\"");
-                for (int i = 0; i < p_descriptor->i_length; i++)
-                     printf("%c", p_descriptor->p_data[i]);
-                printf("\" (%s)\n", GetDescriptorName(p_descriptor->i_tag));
-                break;
-        }
+        DumpDescriptor(p_descriptor);
         p_descriptor = p_descriptor->p_next;
     }
 }
