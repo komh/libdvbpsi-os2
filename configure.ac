@@ -37,6 +37,10 @@ case "${target_os}" in
     CFLAGS_dist="${CFLAGS_dist} -Wno-cast-qual"
     AC_DEFINE([WIN32],[1],["Define to 1 if building for windows with mingw32"])
     ;;
+  os2*)
+    SYS=os2
+    CFLAGS_dist="${CFLAGS_dist} -Wcast-qual"
+    ;;
    *)
     SYS=linux
     CFLAGS_dist="${CFLAGS_dist} -Wcast-qual"
