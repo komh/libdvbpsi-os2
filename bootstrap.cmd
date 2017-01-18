@@ -1,3 +1,3 @@
 extproc sh
 
-./bootstrap
+./bootstrap.
